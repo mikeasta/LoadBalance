@@ -50,6 +50,7 @@ async def pinger(self):
             async with ClientSession() as session:
                 response = await fetch(path, session)
             server_queue.remove(port)
+            break
 
     logging.info(response)
     return web.Response(text=response, status=200)
