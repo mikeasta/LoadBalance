@@ -3,6 +3,7 @@ import logging
 from aiohttp import web, ClientSession
 import requests
 
+
 # Params
 address       = "127.0.0.1"
 default_port  = 5000
@@ -10,18 +11,33 @@ server_queue  = []
 request_queue = []
 ports         = [7001, 7002, 7003, 7004, 7005]
 
+
 # Server initialization
 app    = web.Application()
 routes = web.RouteTableDef()
+
 
 # root func
 @routes.get('/')
 def hello_world(self):
     return web.Response(text="/")
 
+
 # Get request path
 def req_path(port):
     return f"http://{address}:{port}"
+
+
+# Check if there is any available server
+def isAvailablePort():
+    return not len(server_queue) == len(ports)
+
+
+# Look for available port
+def getAvailablePort():
+    for port in ports:
+        if port not in server_queue:
+            return port
 
 
 # * Pinger
@@ -30,35 +46,34 @@ async def fetch(path, session):
     async with session.get(path) as resp:
         return await resp.text()
 
+
 # Listener
 @routes.get('/pinger')
 async def pinger(self):
     response = 'null'
 
     # Check if all servers are working
-    if len(server_queue) == len(ports):
+    if not isAvailablePort():
         request_queue.append(1)
         logging.info("All servers are busy. Your request will be performed later.")
         return web.Response(text=response, status=200)
 
     # Look for available ports
-    for port in ports:
-        if port not in server_queue:
-            # Available port found
-            path = req_path(port)
-            server_queue.append(port)
-            async with ClientSession() as session:
-                response = await fetch(path, session)
-            server_queue.remove(port)
-            break
+    port = getAvailablePort()
+    path = req_path(port)
+    server_queue.append(port)
+    async with ClientSession() as session:
+        response = await fetch(path, session)
+    server_queue.remove(port)
 
     # Check if there are necessary to make new request
     if bool(request_queue):
         request_queue.pop()
-        pinger(self)
+        await pinger(self)
 
     logging.info(response)
     return web.Response(text=response, status=200)
+
 
 app.add_routes(routes)
 if __name__ == "__main__":
