@@ -39,7 +39,7 @@ async def pinger(self):
     if len(server_queue) == len(ports):
         request_queue.append(1)
         logging.info("All servers are busy. Your request will be performed later.")
-        return web.Response(text="null", status=200)
+        return web.Response(text=response, status=200)
 
     # Look for available ports
     for port in ports:
@@ -51,6 +51,11 @@ async def pinger(self):
                 response = await fetch(path, session)
             server_queue.remove(port)
             break
+
+    # Check if there are necessary to make new request
+    if bool(request_queue):
+        request_queue.pop()
+        pinger(self)
 
     logging.info(response)
     return web.Response(text=response, status=200)
