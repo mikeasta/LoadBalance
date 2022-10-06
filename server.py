@@ -66,12 +66,14 @@ async def pinger(self):
         response = await fetch(path, session)
     server_queue.remove(port)
 
+    # Logging response
+    logging.info(response)
+
     # Check if there are necessary to make new request
     if bool(request_queue):
         request_queue.pop()
-        await pinger(self)
-
-    logging.info(response)
+        return await pinger(self)
+    
     return web.Response(text=response, status=200)
 
 
