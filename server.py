@@ -60,7 +60,12 @@ async def pinger(self):
 
     # Look for available ports
     port = getAvailablePort()
+
+    # Getting prepared server url   
     path = getRequestPath(port)
+
+    # Adding server to busy-servers-list
+    # Performs request to that server
     server_queue.append(port)
     async with ClientSession() as session:
         response = await fetch(path, session)
@@ -74,6 +79,7 @@ async def pinger(self):
         request_queue.pop()
         return await pinger(self)
     
+    # Result
     return web.Response(text=response, status=200)
 
 
