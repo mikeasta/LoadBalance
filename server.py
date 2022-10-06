@@ -24,7 +24,7 @@ def hello_world(self):
 
 
 # Get request path
-def req_path(port):
+def getRequestPath(port):
     return f"http://{address}:{port}"
 
 
@@ -60,7 +60,7 @@ async def pinger(self):
 
     # Look for available ports
     port = getAvailablePort()
-    path = req_path(port)
+    path = getRequestPath(port)
     server_queue.append(port)
     async with ClientSession() as session:
         response = await fetch(path, session)
