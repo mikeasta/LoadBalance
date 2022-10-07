@@ -64,7 +64,7 @@ async def fetch():
     
 
 # Listener
-async def pinger(self):
+async def pinger(req):
     response = ''
     
     # Check if all servers are working
@@ -77,14 +77,14 @@ async def pinger(self):
         logging.info(response)
 
         if bool(request_queue):
-            context = request_queue.pop()
-            await spawn(self, pinger(context))
+            context = request_queue.pop(0)
+            await spawn(req, pinger(context))
         
         # Result
         logging.info(time.ctime(time.time()))
         return web.Response(text=response, status=200)
     else: 
-        request_queue.append(self)
+        request_queue.append(req)
         logging.info("All Servers Are Busy Now!")
         return web.Response(text=response, status=200)
 
