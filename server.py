@@ -1,4 +1,5 @@
 import asyncio
+from aiojobs.aiohttp import setup, spawn
 import logging
 from aiohttp import web, ClientSession
 import requests
@@ -41,11 +42,26 @@ def hello_world(self):
 
 
 # Getting data from special worker
-async def fetch(url, session):
-    async with session.get(url) as resp:
-        return await resp.text()
-    
+async def fetch():
+    response = ''
 
+    # Look for available ports
+    port = getAvailablePort()
+
+    # Getting prepared server url   
+    url = getRequestUrl(port)
+
+    # Adding server to busy-servers-list
+    # Performs request to that server
+    server_queue.append(port)
+
+    async with ClientSession() as session:
+        async with session.get(url) as resp:
+            response = await resp.text()
+    
+    server_queue.remove(port)
+    return response
+    
 
 # Listener
 async def pinger(self):
@@ -53,27 +69,17 @@ async def pinger(self):
     
     # Check if all servers are working
     if isAvailablePort():
-        # Look for available ports
-        port = getAvailablePort()
-
-        # Getting prepared server url   
-        url = getRequestUrl(port)
-
-        # Adding server to busy-servers-list
-        # Performs request to that server
-        server_queue.append(port)
-
-        # Get result from workers
-        async with ClientSession() as session:
-            response = await fetch(url, session)
-        server_queue.remove(port)
+        
+        # Getting data
+        response = await fetch()
 
         # Logging response
         logging.info(response)
+
         if bool(request_queue):
             context = request_queue.pop()
-            await pinger(context)
-
+            await spawn(self, pinger(context))
+        
         # Result
         logging.info(time.ctime(time.time()))
         return web.Response(text=response, status=200)
@@ -90,5 +96,6 @@ app.add_routes([
 ])
 
 if __name__ == "__main__":    
+    setup(app)
     logging.basicConfig(level=logging.INFO)
     web.run_app(app, host=address, port=default_port)
