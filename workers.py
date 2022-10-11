@@ -1,4 +1,5 @@
 import time
+import random
 from flask import Flask
 from multiprocessing import Process
 from config import SERVER_AMOUNT, START_WORKER_PORT
@@ -12,8 +13,9 @@ def init_worker(index):
 
     @worker.route('/', methods=['GET'])
     def ping():
-        time.sleep(5)
-        return str(index) 
+        num = random.random() * 5
+        time.sleep(num)
+        return f'Server #{str(index)}: {num} sec.' 
     
     return worker
 
