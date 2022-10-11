@@ -69,19 +69,16 @@ async def pinger(req):
     while not isAvailablePort():
         await asyncio.sleep(1)
 
-    # Check if all servers are working
-    if isAvailablePort():
-
-        # Getting data
-        async with ClientSession() as session:
-            response = await fetch(session)
-
-        # Logging response
-        logging.info(response)
+    # Getting data
+    async with ClientSession() as session:
+        response = await fetch(session)
         
-        # Result
-        logging.info(time.ctime(time.time()))
-        return web.Response(text=response, status=200)
+    # Logging response
+    logging.info(response)
+    
+    # Result
+    logging.info(time.ctime(time.time()))
+    return web.Response(text=response, status=200)
 
 
 # * Server start-up
