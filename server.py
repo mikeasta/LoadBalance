@@ -1,11 +1,7 @@
-from ast import Num, Str
 import asyncio
-from typing import Literal
-from xmlrpc.client import Boolean
-from aiojobs.aiohttp import setup, spawn
 import logging
 from aiohttp import web, ClientSession
-import requests
+from config import SERVER_AMOUNT, START_WORKER_PORT
 import time
 
 
@@ -13,8 +9,7 @@ import time
 address       = "127.0.0.1"
 default_port  = 5000
 server_queue  = []
-request_queue = []
-ports         = [7001, 7002, 7003, 7004, 7005]
+ports         = [START_WORKER_PORT + i + 1 for i in range(SERVER_AMOUNT)]
 
 
 # Server initialization
@@ -27,9 +22,11 @@ routes = web.RouteTableDef()
 def getRequestUrl(port: int) -> str:
     return f"http://{address}:{port}"
 
+
 # Check if there is any available server
 def isAvailablePort() -> bool:
     return not len(server_queue) == len(ports)
+
 
 # Look for available port
 def getAvailablePort() -> int:
@@ -94,6 +91,5 @@ app.add_routes([
 ])
 
 if __name__ == "__main__":    
-    setup(app)
     logging.basicConfig(level=logging.INFO)
     web.run_app(app, host=address, port=default_port)
